@@ -1691,10 +1691,13 @@ static void btusb_work(struct work_struct *work)
 			if (btusb_find_altsetting(data, 6)) {
 				data->usb_alt6_packet_flow = true;
 				new_alts = 6;
-			} else if (test_bit(BTUSB_USE_ALT1_FOR_WBS, &data->flags)) {
-				new_alts = 1;
 			} else {
-				bt_dev_err(hdev, "Device does not support ALT setting 6");
+				const int try_alt = 1; /* 2 also works on BRCM20702A */
+				bt_dev_info(hdev, "Alt 6 for transparent SCO not supported, trying alt %d", try_alt);
+				if (btusb_find_altsetting(data, try_alt))
+					new_alts = try_alt;
+				else
+					bt_dev_err(hdev, "Neither alt setting 6 nor %d supported, WBS unlikely to work", try_alt);
 			}
 		}
 
